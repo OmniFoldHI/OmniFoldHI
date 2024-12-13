@@ -1,0 +1,24 @@
+{
+    "code" : "h110_p000_mfHI17_it8_bce_hl2x100_bs8192",
+
+    "nature_cause_file"     : "../data/Delphes_Herwig_bkg0_output_Sig.out",
+    "nature_effect_file"    : "../data/Delphes_Herwig_bkg1_output_Dat.out",
+    "synthetic_cause_file"  : "../data/Delphes_Pythia_bkg0_output_Sig.out",
+    "synthetic_effect_file" : "../data/Delphes_Pythia_bkg1_output_Dat.out",
+    
+    "multifoldHI_obs" : [
+        "pt_jet", "eta_jet", "phi_jet", "m_jet", "n_jet",
+        "z_DyG", "th_DyG", "kt_DyG",
+        "pt_SD", "m_SD", "pt_RSD", "n_RSD",
+        "tau1", "tau2", "tau3", "tau4", "tau5"
+    ],
+    "multifoldHI_n_iterations" : 8,
+    "multifoldHI_unc_n_stat"   : 2,
+    "multifoldHI_unc_n_syst"   : 5,
+    "multifoldHI_loss": "bce",
+    "multifoldHI_NN1_arch": [100,100],
+    "multifoldHI_NN2_arch": [100,100],
+    "multifoldHI_epochs": null,
+    "multifoldHI_batch_size": 8192
+
+}
