@@ -17,7 +17,7 @@ def read_cause_effect (datafile_cause, datafile_effect):
     cause_labels = get_labels(datafile_cause)
 
     cause_values = np.loadtxt(datafile_cause)
-    for i,label in enumerate(cause_labels):
+    for i,label in enumerate(cause_labels): 
         dataset['cause_'+label] = cause_values.T[i]
         
     # add raw evs
@@ -28,7 +28,10 @@ def read_cause_effect (datafile_cause, datafile_effect):
 
     return dataset
 
-def associate_data (obs_dict: dict, synthetic: dict, nature: dict, verbose=True):
+def associate_data (obs_dict: dict, synthetic: dict, nature: dict, norm_use_F=True, verbose=True):
+    '''
+    norm_use_F: includes fake number of events in the normalization. If False, only the non fake are used to normalize. Fakes are always counted to normalize fake counts.
+    '''
 
     # Calculate quantities to be stored in obs
     for label, obs in obs_dict.items():
@@ -51,33 +54,41 @@ def associate_data (obs_dict: dict, synthetic: dict, nature: dict, verbose=True)
         obs['midbin_E_unc'] = obs['binwidth_E']/2
 
         # Event number (for normalization)
-        obs['nevs_syn_C'] = np.count_nonzero(obs['evs_syn_C'])
-        obs['nevs_syn_E'] = np.count_nonzero(obs['evs_syn_E'][obs['evs_syn_E']!=obs['val_T']])
-        obs['nevs_nat_C'] = np.count_nonzero(obs['evs_nat_C'])
-        obs['nevs_nat_E'] = np.count_nonzero(obs['evs_nat_E'][obs['evs_nat_E']!=obs['val_T']])
+        obs['nevs_syn_C']   = np.count_nonzero(obs['evs_syn_C'][obs['evs_syn_C']!=obs['val_F']])
+        obs['nevs_syn_C_F'] = np.count_nonzero(obs['evs_syn_C'])  # includes fake counts
+        obs['nevs_syn_E']   = np.count_nonzero(obs['evs_syn_E'][obs['evs_syn_E']!=obs['val_T']])
+        obs['nevs_nat_C']   = np.count_nonzero(obs['evs_nat_C'][obs['evs_nat_C']!=obs['val_F']])
+        obs['nevs_nat_C_F'] = np.count_nonzero(obs['evs_nat_C'])
+        obs['nevs_nat_E']   = np.count_nonzero(obs['evs_nat_E'][obs['evs_nat_E']!=obs['val_T']])
 
         # get the histograms
-        obs['hist_syn_C'] = np.histogram(obs['evs_syn_C'], bins=obs['bins_C'] )[0] / obs['binwidth_C'] / obs['nevs_syn_C']
-        obs['hist_syn_E'] = np.histogram(obs['evs_syn_E'], bins=obs['bins_E'] )[0] / obs['binwidth_E'] / obs['nevs_syn_E']
-        obs['hist_nat_C'] = np.histogram(obs['evs_nat_C'], bins=obs['bins_C'] )[0] / obs['binwidth_C'] / obs['nevs_nat_C']
-        obs['hist_nat_E'] = np.histogram(obs['evs_nat_E'], bins=obs['bins_E'] )[0] / obs['binwidth_E'] / obs['nevs_nat_E']
+        obs['hist_syn_C']  = np.histogram(obs['evs_syn_C'], bins=obs['bins_C'] )[0] / obs['binwidth_C']
+        obs['hist_syn_C'] /= obs['nevs_syn_C_F'] if norm_use_F else obs['nevs_syn_C']
+        obs['hist_syn_E']  = np.histogram(obs['evs_syn_E'], bins=obs['bins_E'] )[0] / obs['binwidth_E'] / obs['nevs_syn_E']
+
+        obs['hist_nat_C']  = np.histogram(obs['evs_nat_C'], bins=obs['bins_C'] )[0] / obs['binwidth_C']
+        obs['hist_nat_C'] /= obs['nevs_nat_C_F'] if norm_use_F else obs['nevs_nat_C']
+        obs['hist_nat_E']  = np.histogram(obs['evs_nat_E'], bins=obs['bins_E'] )[0] / obs['binwidth_E'] / obs['nevs_nat_E']
 
         # get the standard deviations
-        obs['hist_syn_C_unc'] = np.sqrt(np.histogram(obs['evs_syn_C'], bins=obs['bins_C'] )[0]) / obs['binwidth_C'] / obs['nevs_syn_C']
-        obs['hist_syn_E_unc'] = np.sqrt(np.histogram(obs['evs_syn_E'], bins=obs['bins_E'] )[0]) / obs['binwidth_E'] / obs['nevs_syn_E']
-        obs['hist_nat_C_unc'] = np.sqrt(np.histogram(obs['evs_nat_C'], bins=obs['bins_C'] )[0]) / obs['binwidth_C'] / obs['nevs_nat_C']
-        obs['hist_nat_E_unc'] = np.sqrt(np.histogram(obs['evs_nat_E'], bins=obs['bins_E'] )[0]) / obs['binwidth_E'] / obs['nevs_nat_E']
+        obs['hist_syn_C_unc']  = np.sqrt(np.histogram(obs['evs_syn_C'], bins=obs['bins_C'] )[0]) / obs['binwidth_C']
+        obs['hist_syn_C_unc'] /= obs['nevs_syn_C_F'] if norm_use_F else obs['nevs_syn_C']
+        obs['hist_syn_E_unc']  = np.sqrt(np.histogram(obs['evs_syn_E'], bins=obs['bins_E'] )[0]) / obs['binwidth_E'] / obs['nevs_syn_E']
+
+        obs['hist_nat_C_unc']  = np.sqrt(np.histogram(obs['evs_nat_C'], bins=obs['bins_C'] )[0]) / obs['binwidth_C']
+        obs['hist_nat_C_unc'] /= obs['nevs_nat_C_F'] if norm_use_F else obs['nevs_nat_C']
+        obs['hist_nat_E_unc']  = np.sqrt(np.histogram(obs['evs_nat_E'], bins=obs['bins_E'] )[0]) / obs['binwidth_E'] / obs['nevs_nat_E']
 
         # get fakes and trash
-        obs['hist_syn_F'] = np.histogram( obs['evs_syn_C'], bins=[obs['val_F']-.01,obs['val_F']+.01] )[0] / obs['nevs_syn_C']
+        obs['hist_syn_F'] = np.histogram( obs['evs_syn_C'], bins=[obs['val_F']-.01,obs['val_F']+.01] )[0] / obs['nevs_syn_C_F']
         obs['hist_syn_T'] = np.histogram( obs['evs_syn_E'], bins=[obs['val_T']-.01,obs['val_T']+.01] )[0] / obs['nevs_syn_E']
-        obs['hist_nat_F'] = np.histogram( obs['evs_nat_C'], bins=[obs['val_F']-.01,obs['val_F']+.01] )[0] / obs['nevs_nat_C']
+        obs['hist_nat_F'] = np.histogram( obs['evs_nat_C'], bins=[obs['val_F']-.01,obs['val_F']+.01] )[0] / obs['nevs_nat_C_F']
         obs['hist_nat_T'] = np.histogram( obs['evs_nat_E'], bins=[obs['val_T']-.01,obs['val_T']+.01] )[0] / obs['nevs_nat_E']
 
         # get fakes and trash standard deviations
-        obs['hist_syn_F_unc'] = np.sqrt( np.histogram( obs['evs_syn_C'], bins=[obs['val_F']-.01,obs['val_F']+.01] )[0] ) / obs['nevs_syn_C']
+        obs['hist_syn_F_unc'] = np.sqrt( np.histogram( obs['evs_syn_C'], bins=[obs['val_F']-.01,obs['val_F']+.01] )[0] ) / obs['nevs_syn_C_F']
         obs['hist_syn_T_unc'] = np.sqrt( np.histogram( obs['evs_syn_E'], bins=[obs['val_T']-.01,obs['val_T']+.01] )[0] ) / obs['nevs_syn_E']
-        obs['hist_nat_F_unc'] = np.sqrt( np.histogram( obs['evs_nat_C'], bins=[obs['val_F']-.01,obs['val_F']+.01] )[0] ) / obs['nevs_nat_C']
+        obs['hist_nat_F_unc'] = np.sqrt( np.histogram( obs['evs_nat_C'], bins=[obs['val_F']-.01,obs['val_F']+.01] )[0] ) / obs['nevs_nat_C_F']
         obs['hist_nat_T_unc'] = np.sqrt( np.histogram( obs['evs_nat_E'], bins=[obs['val_T']-.01,obs['val_T']+.01] )[0] ) / obs['nevs_nat_E']
         
         if verbose:
@@ -85,7 +96,7 @@ def associate_data (obs_dict: dict, synthetic: dict, nature: dict, verbose=True)
 
     return
 
-def create_dict_data (dict_data_empty, synthetic_cause_file, synthetic_effect_file, nature_cause_file, nature_effect_file, verbose=True):
+def create_dict_data (dict_data_empty, synthetic_cause_file, synthetic_effect_file, nature_cause_file, nature_effect_file, norm_use_F=True, verbose=True):
 
     synthetic = read_cause_effect( synthetic_cause_file, synthetic_effect_file )
     nature    = read_cause_effect( nature_cause_file   , nature_effect_file )
@@ -96,7 +107,7 @@ def create_dict_data (dict_data_empty, synthetic_cause_file, synthetic_effect_fi
         obs_dict.update({'func': lambda dset, ptype, obs_label=obs_label: dset[ptype+f'_{obs_label}']})  # By adding obs_label=obs_label as a default argument to the lambda function, you capture the current value of obs_label at each iteration. This ensures that each lambda function has its own copy of obs_label with the value it had during that specific iteration.
 
     # Add data to dictionary
-    associate_data(dict_data, synthetic, nature, verbose=verbose)
+    associate_data(dict_data, synthetic, nature, norm_use_F, verbose=verbose)
 
     return dict_data
 

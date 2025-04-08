@@ -42,13 +42,6 @@ with open(args.config_analysis_file, 'r') as config_file:
     multifoldHI_unc_n_stat   = config_analysis['multifoldHI_unc_n_stat']
     multifoldHI_unc_n_syst   = config_analysis['multifoldHI_unc_n_syst']
 
-    # MultifoldHI NN hyperparameters
-    multifoldHI_loss       = config_analysis['multifoldHI_loss']
-    multifoldHI_NN1_arch   = config_analysis['multifoldHI_NN1_arch']
-    multifoldHI_NN2_arch   = config_analysis['multifoldHI_NN2_arch']
-    multifoldHI_epochs     = config_analysis['multifoldHI_epochs']
-    multifoldHI_batch_size = config_analysis['multifoldHI_batch_size']
-
 # Get config to build dictionaries
 with open(args.config_dict_data_file, 'r') as config_file:
     dict_data_empty = json.load(config_file)
@@ -57,7 +50,8 @@ with open(args.config_dict_data_file, 'r') as config_file:
     print('\nCreating dict_data.')
     dict_data = dictionaries.create_dict_data(dict_data_empty,
                                               synthetic_cause_file, synthetic_effect_file,
-                                              nature_cause_file, nature_effect_file, verbose=False)
+                                              nature_cause_file, nature_effect_file,
+                                              norm_use_F=False, verbose=False)
 
 # Save dict_data
 data_code = f'{code.split("_")[0]}_{code.split("_")[1]}'
@@ -67,17 +61,13 @@ dictionaries.save(dict_data, f'dict_data_{data_code}.pkl')
 print('\nUnfolding w/ MultiFold-HI.')
 multifoldHI_out = omnifoldHI.multifold_unc_from_dict(dict_data, multifoldHI_obs,
                                                      n_iterations=multifoldHI_n_iterations,
-                                                     loss=multifoldHI_loss,
-                                                     NN1_arch=multifoldHI_NN1_arch,
-                                                     NN2_arch=multifoldHI_NN2_arch,
-                                                     epochs=multifoldHI_epochs,
-                                                     batch_size=multifoldHI_batch_size,
                                                      unc_n_stat=multifoldHI_unc_n_stat,
                                                      unc_n_syst=multifoldHI_unc_n_syst)
 dict_multifoldHI = omnifoldHI.create_dict_multifoldHI(dict_data,
                                                       multifoldHI_out['weights_stat'],
                                                       multifoldHI_out['weights_syst'],
-                                                      multifold_it=-1)
+                                                      multifold_it=-1,
+                                                      norm_use_F=False)
 
 # Save dictionaries 
 print('\nSaving dictionaires.')

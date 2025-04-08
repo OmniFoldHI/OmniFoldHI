@@ -3,7 +3,7 @@ import copy
 from matplotlib import pyplot as plt
 
 from keras import regularizers
-from keras.layers import Dense, Input
+from keras.layers import Dense, Input, Dropout
 from keras.models import Model
 
 import os
@@ -65,14 +65,16 @@ def weighted_maximum_likelihood_cl_square (y_true, y_pred):
     
     return K.mean(t_loss)
 
-def loss_functional (loss='bce', weights_square=False):
+def loss_functional (weights_square=False):
+    loss = 'bce'
     if loss == 'bce':
         return weighted_binary_crossentropy if not weights_square else weighted_binary_crossentropy_square
     elif loss == 'mlc':
         return weighted_maximum_likelihood_cl if not weights_square else weighted_maximum_likelihood_cl_square
 
-def reweight (events, model, batch_size=10000, loss='bce', weights_square=False):
+def reweight (events, model, batch_size, weights_square=False):
     f = model.predict(events, batch_size=batch_size)
+    loss = 'bce'
     if loss == 'bce':
         weights = f / (1. - f)
     elif loss == 'mlc':
@@ -84,9 +86,8 @@ def reweight (events, model, batch_size=10000, loss='bce', weights_square=False)
     return weights_out
 
 def multifold (evs_list_syn_C, evs_list_syn_E, evs_list_nat_E, val_F, val_T,
-               n_iterations=4, weights_syn=[], weights_nat=[], network_seed=239,
-               loss='bce', NN1_arch=[100,100], NN2_arch=[100,100], epochs=None, batch_size=10000,
-               weights_square=False, ignore_fake=True):
+               n_iterations=4, weights_syn=[], weights_nat=[],
+               weights_square=False, network_seed=239):
     '''
     Trash from data will automatically be taken out of evs_nat_E.
 
@@ -130,16 +131,18 @@ def multifold (evs_list_syn_C, evs_list_syn_E, evs_list_nat_E, val_F, val_T,
     random.seed(network_seed)
     np.random.seed(network_seed+934)
     tf.random.set_seed(network_seed+534)
-    #tf.config.experimental.enable_op_determinism()
 
     # GPU usage
     if len(tf.config.experimental.list_physical_devices('GPU')):
         print('Using available GPU.')
 
+
     # NN architectures
-    # Choice of hidden layers widths
-    NN1_hidden_widths = NN1_arch
-    NN2_hidden_widths = NN2_arch
+    # Choice of hidden layers widths, batch size, and number of epochs
+    NN1_hidden_widths = [200,200]
+    NN2_hidden_widths = [200,200]
+    batch_size = 8192
+    epochs     = 20
     
     ###
     # NN inputs
@@ -147,11 +150,13 @@ def multifold (evs_list_syn_C, evs_list_syn_E, evs_list_nat_E, val_F, val_T,
     NN2_input = Input((len(evs_list_syn_C), ))
 
     ###
-    # NN hidden layers
+    # NN1 hidden layers
     NN1_hidden_layers = [ Dense(NN1_hidden_widths[0], activation='relu',)(NN1_input) ]
     for width in NN1_hidden_widths[1:]:
         NN1_hidden_layers.append( Dense(width, activation='relu')(NN1_hidden_layers[-1]) )
 
+    ###
+    # NN2 hidden layers
     NN2_hidden_layers = [ Dense(NN2_hidden_widths[0], activation='relu')(NN2_input) ]
     for width in NN2_hidden_widths[1:]:
         NN2_hidden_layers.append( Dense(width, activation='relu')(NN2_hidden_layers[-1]) )
@@ -162,17 +167,6 @@ def multifold (evs_list_syn_C, evs_list_syn_E, evs_list_nat_E, val_F, val_T,
     NN2_output = Dense(1, activation='sigmoid')(NN2_hidden_layers[-1])
     NN1_model = Model(inputs=NN1_input, outputs=NN1_output)
     NN2_model = Model(inputs=NN2_input, outputs=NN2_output)
-
-    ###
-    # NN training hyperparameters
-    earlystopping = EarlyStopping(patience=10,
-                                  verbose=0,
-                                  restore_best_weights=True)
-    if not epochs:
-        epochs = 200
-        callbacks = [earlystopping]
-    else:
-        callbacks = None
     
 
     # Events
@@ -197,6 +191,7 @@ def multifold (evs_list_syn_C, evs_list_syn_E, evs_list_nat_E, val_F, val_T,
     events_sim[events_sim[:,0]!=val_FT] = (events_sim[events_sim[:,0]!=val_FT]-mean_x_1)/std_x_1
     events_dat[events_dat[:,0]!=val_FT] = (events_dat[events_dat[:,0]!=val_FT]-mean_x_1)/std_x_1
 
+
     # Weights
     # initial weights
     if len(weights_syn):
@@ -213,9 +208,11 @@ def multifold (evs_list_syn_C, evs_list_syn_E, evs_list_nat_E, val_F, val_T,
     else:
         weights_dat = np.ones(len(events_dat))
 
+
     # Make sure no trash in dat
     weights_dat = weights_dat[events_dat[:,0]!=val_T]
     events_dat  = events_dat[events_dat[:,0]!=val_T]
+
 
     # Create output arrays
     # multifold weights
@@ -225,9 +222,8 @@ def multifold (evs_list_syn_C, evs_list_syn_E, evs_list_nat_E, val_F, val_T,
     ###
     # performance metrics
     train_loss     = np.full( (n_iterations+1, 2, epochs), np.nan )
-    val_loss       = np.full( (n_iterations+1, 2, epochs), np.nan )
     train_accuracy = np.full( (n_iterations+1, 2, epochs), np.nan )
-    val_accuracy   = np.full( (n_iterations+1, 2, epochs), np.nan )
+
 
     # Weight iteration
     for i in range(n_iterations):
@@ -245,14 +241,14 @@ def multifold (evs_list_syn_C, evs_list_syn_E, evs_list_nat_E, val_F, val_T,
         weights_1 = np.concatenate((weights_push[mask], weights_dat))
 
         # train and test sets
-        X_train_1, X_test_1, Y_train_1, Y_test_1, w_train_1, w_test_1 = train_test_split(xvals_1, yvals_1, weights_1)
+        X_train_1, X_test_1, Y_train_1, Y_test_1, w_train_1, w_test_1 = train_test_split(xvals_1, yvals_1, weights_1, test_size=2)
 
         # zip ("hide") the weights with the labels
         Y_train_1 = np.stack((Y_train_1, w_train_1), axis=1)
         Y_test_1 = np.stack((Y_test_1, w_test_1), axis=1)
         
         # NN1 initialization and training
-        NN1_model.compile(loss=loss_functional(loss, weights_square),
+        NN1_model.compile(loss=loss_functional(weights_square),
                           optimizer='Adam',
                           metrics=['accuracy'],
                           weighted_metrics=[])
@@ -261,11 +257,10 @@ def multifold (evs_list_syn_C, evs_list_syn_E, evs_list_nat_E, val_F, val_T,
                                     epochs=epochs,
                                     batch_size=batch_size,
                                     validation_data=(X_test_1, Y_test_1),
-                                    callbacks=callbacks,
                                     verbose=1)
 
         # Step I event reweighting
-        weights_pull = reweight(events_sim, NN1_model, batch_size, loss, weights_square)
+        weights_pull = reweight(events_sim, NN1_model, batch_size, weights_square)
         weights_pull[events_sim[:,0]==val_FT] = 0
 
         # Save weights
@@ -274,9 +269,7 @@ def multifold (evs_list_syn_C, evs_list_syn_E, evs_list_nat_E, val_F, val_T,
         # Save NN1 performace metrics
         epoch1_length = len(NN1_history.history['loss'])
         train_loss[i+1,0][:epoch1_length]     = NN1_history.history['loss']
-        val_loss[i+1,0][:epoch1_length]       = NN1_history.history['val_loss']
         train_accuracy[i+1,0][:epoch1_length] = NN1_history.history['accuracy']
-        val_accuracy[i+1,0][:epoch1_length]   = NN1_history.history['val_accuracy']
 
         # Print info
         print('Normalization deviation - step 1:',np.mean(np.sum(weights_dat) / np.sum(weights_pull)))
@@ -288,21 +281,20 @@ def multifold (evs_list_syn_C, evs_list_syn_E, evs_list_nat_E, val_F, val_T,
         # Y_2 -> ( 0 , 1 )
         mask_sim = events_sim[:,0] != val_FT
         mask_gen = events_gen[:,0] != val_FT
-        #mask     = mask_sim  # SEE DIFFERENCE LATER WHEN USEING THIS MASK INSTEAD!!!
-        mask     = mask_sim * mask_gen if ignore_fake else mask_sim
+        mask     = mask_sim * mask_gen
         xvals_2 = np.concatenate([events_gen[mask],events_gen[mask]])
         yvals_2 = np.concatenate([np.zeros(len(events_gen[mask])),np.ones(len(events_gen[mask]))])
         weights_2 = np.concatenate([np.ones(len(events_gen[mask])),weights_pull[mask]*weights_push[mask]])
 
         # train and test sets
-        X_train_2, X_test_2, Y_train_2, Y_test_2, w_train_2, w_test_2 = train_test_split(xvals_2, yvals_2, weights_2)
+        X_train_2, X_test_2, Y_train_2, Y_test_2, w_train_2, w_test_2 = train_test_split(xvals_2, yvals_2, weights_2, test_size=2)
 
         # zip ("hide") the weights with the labels
         Y_train_2 = np.stack((Y_train_2, w_train_2), axis=1)
         Y_test_2 = np.stack((Y_test_2, w_test_2), axis=1)
         
         # NN2 initialization and training
-        NN2_model.compile(loss=loss_functional(loss, weights_square),
+        NN2_model.compile(loss=loss_functional(weights_square),
                           optimizer='Adam',
                           metrics=['accuracy'],
                           weighted_metrics=[])
@@ -311,18 +303,12 @@ def multifold (evs_list_syn_C, evs_list_syn_E, evs_list_nat_E, val_F, val_T,
                                     epochs=epochs,
                                     batch_size=batch_size,
                                     validation_data=(X_test_2, Y_test_2),
-                                    callbacks=callbacks,
                                     verbose=1)
         
         # Step II event reweighting
-        if ignore_fake:
-            print('Ignoring fakes')
-            weights_push[~mask_gen*~mask_sim] = np.mean( weights_pull[~mask_gen*mask_sim]*weights_push[~mask_gen*mask_sim] )
-            weights_push[~mask_gen* mask_sim] = weights_pull[~mask_gen*mask_sim]*weights_push[~mask_gen*mask_sim]
-            weights_push[ mask_gen] = reweight(events_gen[mask_gen], NN2_model, batch_size, loss, weights_square)
-        else:
-            print('Standard step II')
-            weights_push = reweight(events_gen, NN2_model, batch_size, loss, weights_square)
+        weights_push[~mask_gen*~mask_sim] = np.mean( weights_pull[~mask_gen*mask_sim]*weights_push[~mask_gen*mask_sim] )
+        weights_push[~mask_gen* mask_sim] = weights_pull[~mask_gen*mask_sim]*weights_push[~mask_gen*mask_sim]
+        weights_push[ mask_gen] = reweight(events_gen[mask_gen], NN2_model, batch_size, weights_square)
 
         # Save weights
         weights[i+1, 1] = weights_push
@@ -330,9 +316,7 @@ def multifold (evs_list_syn_C, evs_list_syn_E, evs_list_nat_E, val_F, val_T,
         # Save NN2 performace metrics
         epoch2_length = len(NN2_history.history['loss'])
         train_loss[i+1,1][:epoch2_length]     = NN2_history.history['loss']
-        val_loss[i+1,1][:epoch2_length]       = NN2_history.history['val_loss']
         train_accuracy[i+1,1][:epoch2_length] = NN2_history.history['accuracy']
-        val_accuracy[i+1,1][:epoch2_length]   = NN2_history.history['val_accuracy']
 
         # Print info
         print('Normalization deviation - step 2:',np.mean(np.sum(weights_pull[mask]) / np.sum(weights_push[mask])))
@@ -341,15 +325,11 @@ def multifold (evs_list_syn_C, evs_list_syn_E, evs_list_nat_E, val_F, val_T,
     return {
         'weights': weights,
         'train_loss': train_loss,
-        'val_loss': val_loss,
-        'train_accuracy': train_accuracy,
-        'val_accuracy': val_accuracy
+        'train_accuracy': train_accuracy
     }
 
 def multifold_unc (evs_list_syn_C, evs_list_syn_E, evs_list_nat_E, val_F, val_T,
-                   n_iterations=4, loss='bce',
-                   NN1_arch=[100,100], NN2_arch=[100,100], epochs=None, batch_size=10000,
-                   unc_n_stat=2, unc_n_syst=1):
+                   n_iterations=4, unc_n_stat=2, unc_n_syst=1):
     '''
     Parameters
     ----------
@@ -399,9 +379,8 @@ def multifold_unc (evs_list_syn_C, evs_list_syn_E, evs_list_nat_E, val_F, val_T,
 
         # Compute onmifold weights and append
         multifold_out = multifold(evs_list_syn_C, evs_list_syn_E, evs_list_nat_E, val_F, val_T,
-                                  n_iterations=n_iterations, weights_syn=weights_syn, weights_nat=weights_nat, network_seed=network_seed,
-                                  loss=loss, NN1_arch=NN1_arch, NN2_arch=NN2_arch, epochs=epochs, batch_size=batch_size,
-                                  weights_square=weights_square)
+                                  n_iterations=n_iterations, weights_syn=weights_syn, weights_nat=weights_nat,
+                                  weights_square=weights_square, network_seed=network_seed)
 
         weights = multifold_out['weights']
         weights_stat.append(weights)
@@ -409,9 +388,7 @@ def multifold_unc (evs_list_syn_C, evs_list_syn_E, evs_list_nat_E, val_F, val_T,
         # Performance metrics from 1st stat run
         if i==0:
             train_loss     = multifold_out['train_loss']
-            val_loss       = multifold_out['val_loss']
             train_accuracy = multifold_out['train_accuracy']
-            val_accuracy   = multifold_out['val_accuracy']
 
     weights_stat = np.array(weights_stat)
 
@@ -428,9 +405,8 @@ def multifold_unc (evs_list_syn_C, evs_list_syn_E, evs_list_nat_E, val_F, val_T,
 
         # Compute onmifold weights and append
         multifold_out = multifold(evs_list_syn_C, evs_list_syn_E, evs_list_nat_E, val_F, val_T,
-                                  n_iterations=n_iterations, weights_syn=weights_syn, weights_nat=weights_nat, network_seed=network_seed,
-                                  loss=loss, NN1_arch=NN1_arch, NN2_arch=NN2_arch, epochs=epochs, batch_size=batch_size,
-                                  weights_square=False)
+                                  n_iterations=n_iterations, weights_syn=weights_syn, weights_nat=weights_nat,
+                                  weights_square=False, network_seed=network_seed)
 
         weights = multifold_out['weights']
         weights_syst.append(weights)
@@ -441,15 +417,11 @@ def multifold_unc (evs_list_syn_C, evs_list_syn_E, evs_list_nat_E, val_F, val_T,
         'weights_stat': weights_stat,
         'weights_syst': weights_syst,
         'train_loss': train_loss,
-        'val_loss': val_loss,
-        'train_accuracy': train_accuracy,
-        'val_accuracy': val_accuracy
+        'train_accuracy': train_accuracy
     }
 
 def multifold_unc_from_dict (dict_data, obs_unfold,
-                             n_iterations=4, loss='bce',
-                             NN1_arch=[100,100], NN2_arch=[100,100], epochs=None, batch_size=10000,
-                             unc_n_stat=2, unc_n_syst=1):
+                             n_iterations=4, unc_n_stat=2, unc_n_syst=1):
 
     evs_list_syn_C = [ dict_data[obs_label]['evs_syn_C'] for obs_label in obs_unfold ]
     evs_list_syn_E = [ dict_data[obs_label]['evs_syn_E'] for obs_label in obs_unfold ]
@@ -458,12 +430,11 @@ def multifold_unc_from_dict (dict_data, obs_unfold,
     val_T          = dict_data[obs_unfold[0]]['val_T']
 
     return multifold_unc(evs_list_syn_C, evs_list_syn_E, evs_list_nat_E, val_F, val_T,
-                         n_iterations=n_iterations, loss=loss,
-                         NN1_arch=NN1_arch, NN2_arch=NN2_arch, epochs=epochs, batch_size=batch_size,
-                         unc_n_stat=unc_n_stat, unc_n_syst=unc_n_syst)
+                         n_iterations=n_iterations, unc_n_stat=unc_n_stat, unc_n_syst=unc_n_syst)
 
 def weights_to_histo (evs_list_syn_C, evs_list_syn_E, val_F, val_T,
-                      bins_list_C, weights_stat, weights_syst, multifold_it=-1):
+                      bins_list_C, weights_stat, weights_syst, multifold_it=-1,
+                      norm_use_F=True):
     '''
     Parameters
     ----------
@@ -519,35 +490,38 @@ def weights_to_histo (evs_list_syn_C, evs_list_syn_E, val_F, val_T,
 
             # values for normalization
             # (only the first weights are used to compute normalization)
-            nevs_C_stat = np.sum( weights_stat[0][multifold_it,1] )
-            nevs_E_stat = np.sum( weights_stat[0][multifold_it,1][evs_syn_E!=val_T] )
+            nevs_C_stat   = np.sum( weights_stat[0][multifold_it,1][evs_syn_C!=val_F] )
+            nevs_C_F_stat = np.sum( weights_stat[0][multifold_it,1] )  # includes fake counts
+            nevs_E_stat   = np.sum( weights_stat[0][multifold_it,1][evs_syn_E!=val_T] )
 
             hist_C_stat      = np.array([ np.histogram(evs_syn_C, bins_C, weights=weights_stat[0][multifold_it,1])[0] ])  # array so it can be stacked for hist_C
-            hist_C_stat     /= binwidth_C * nevs_C_stat
+            hist_C_stat     /= binwidth_C * nevs_C_F_stat if norm_use_F else binwidth_C * nevs_C_stat
             hist_C_stat_unc  = np.sqrt( np.histogram(evs_syn_C, bins_C, weights=weights_stat[-1][multifold_it,1]**2)[0] )
-            hist_C_stat_unc /= binwidth_C * nevs_C_stat
+            hist_C_stat_unc /= binwidth_C * nevs_C_F_stat if norm_use_F else binwidth_C * nevs_C_stat
 
             hist_F_stat      = np.array([ np.histogram(evs_syn_C, bins=[val_F-.01, val_F+.01], weights=weights_stat[0][multifold_it,1])[0] ])  # array so it can be stacked for hist_F
-            hist_F_stat     /= nevs_C_stat
+            hist_F_stat     /= nevs_C_F_stat
             hist_F_stat_unc  = np.sqrt( np.histogram(evs_syn_C, bins=[val_F-.01, val_F+.01], weights=weights_stat[-1][multifold_it,1]**2)[0] )
-            hist_F_stat_unc /= nevs_C_stat
+            hist_F_stat_unc /= nevs_C_F_stat
 
             hist_T_stat      = np.array([ np.histogram(evs_syn_E, bins=[val_T-.01, val_T+.01], weights=weights_stat[0][multifold_it,1])[0] ])  # array so it can be stacked for hist_T
             hist_T_stat     /= nevs_E_stat
             hist_T_stat_unc  = np.sqrt( np.histogram(evs_syn_E, bins=[val_T-.01, val_T+.01], weights=weights_stat[-1][multifold_it,1]**2)[0] )
             hist_T_stat_unc /= nevs_E_stat
+
         else: # uncertainty stat comes from std of histograms
 
             # values for normalization
-            nevs_C_stat = np.array([ np.sum( weights[multifold_it,1] ) for weights in weights_stat ])
-            nevs_E_stat = np.array([ np.sum( weights[multifold_it,1][evs_syn_E!=val_T] ) for weights in weights_stat ])
+            nevs_C_stat   = np.array([ np.sum( weights[multifold_it,1][evs_syn_C!=val_F] ) for weights in weights_stat ])
+            nevs_C_F_stat = np.array([ np.sum( weights[multifold_it,1] ) for weights in weights_stat ])
+            nevs_E_stat   = np.array([ np.sum( weights[multifold_it,1][evs_syn_E!=val_T] ) for weights in weights_stat ])
 
             hist_C_stat     = np.array([ np.histogram(evs_syn_C, bins_C, weights=weights[multifold_it,1])[0] for weights in weights_stat ])
-            hist_C_stat    /= binwidth_C * nevs_C_stat[:,None]  # [:,None] to expand dimensions: (n_hists,) -> (n_hists,1)
+            hist_C_stat    /= binwidth_C * nevs_C_F_stat[:,None] if norm_use_F else  binwidth_C * nevs_C_stat[:,None]  # [:,None] to expand dimensions: (n_hists,) -> (n_hists,1)
             hist_C_stat_unc = np.std (hist_C_stat, axis=0)
 
             hist_F_stat     = np.array([ np.histogram(evs_syn_C, bins=[val_F-.01, val_F+.01], weights=weights[multifold_it,1])[0] for weights in weights_stat ])
-            hist_F_stat    /= nevs_C_stat[:,None]
+            hist_F_stat    /= nevs_C_F_stat[:,None]
             hist_F_stat_unc = np.std (hist_F_stat, axis=0)
 
             hist_T_stat     = np.array([ np.histogram(evs_syn_E, bins=[val_T-.01, val_T+.01], weights=weights[multifold_it,1])[0] for weights in weights_stat ])
@@ -560,17 +534,18 @@ def weights_to_histo (evs_list_syn_C, evs_list_syn_E, val_F, val_T,
 
         # systematic uncertainty
         # values for normalization
-        nevs_C_syst = np.array([ np.sum( weights[multifold_it,1] ) for weights in weights_syst ])
-        nevs_E_syst = np.array([ np.sum( weights[multifold_it,1][evs_syn_E!=val_T] ) for weights in weights_syst ])
+        nevs_C_syst   = np.array([ np.sum( weights[multifold_it,1][evs_syn_C!=val_F] ) for weights in weights_syst ])
+        nevs_C_F_syst = np.array([ np.sum( weights[multifold_it,1] ) for weights in weights_syst ])
+        nevs_E_syst   = np.array([ np.sum( weights[multifold_it,1][evs_syn_E!=val_T] ) for weights in weights_syst ])
 
         ###
         # compute histograms and uncertainty w/ normalization
         hist_C_syst     = np.array([ np.histogram(evs_syn_C, bins_C, weights=weights[multifold_it,1])[0] for weights in weights_syst ])
-        hist_C_syst    /= binwidth_C * nevs_C_syst[:,None]
+        hist_C_syst    /= binwidth_C * nevs_C_F_syst[:,None] if norm_use_F else binwidth_C * nevs_C_syst[:,None]
         hist_C_syst_unc = np.std (hist_C_syst, axis=0)
 
         hist_F_syst     = np.array([ np.histogram(evs_syn_C, bins=[val_F-.01, val_F+.01], weights=weights[multifold_it,1])[0] for weights in weights_syst ])
-        hist_F_syst    /= nevs_C_syst[:,None]
+        hist_F_syst    /= nevs_C_F_syst[:,None]
         hist_F_syst_unc = np.std (hist_F_syst, axis=0)
         
         hist_T_syst     = np.array([ np.histogram(evs_syn_E, bins=[val_T-.01, val_T+.01], weights=weights[multifold_it,1])[0] for weights in weights_syst ])
@@ -598,7 +573,7 @@ def weights_to_histo (evs_list_syn_C, evs_list_syn_E, val_F, val_T,
 
     return histograms_data
 
-def create_dict_multifoldHI (dict_data, weights_stat, weights_syst, multifold_it=-1):
+def create_dict_multifoldHI (dict_data, weights_stat, weights_syst, multifold_it=-1, norm_use_F=True):
 
     # create dictionary with unfolded info and histograms
     dict_multifoldHI = {}
@@ -621,7 +596,8 @@ def create_dict_multifoldHI (dict_data, weights_stat, weights_syst, multifold_it
     val_T = dict_data[obs_label]['val_T']
 
     histograms = weights_to_histo(dict_data_evs_list_syn_C, dict_data_evs_list_syn_E, val_F, val_T,
-                                  dict_data_bins_list_C, weights_stat, weights_syst, multifold_it)
+                                  dict_data_bins_list_C, weights_stat, weights_syst, multifold_it,
+                                  norm_use_F)
     
     for obs_label, histo in zip(dict_data_obs, histograms):
         
