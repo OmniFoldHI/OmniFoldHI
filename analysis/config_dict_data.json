@@ -58,8 +58,8 @@
     "kt_DyG": {
         "nbins_C": 15, "nbins_E": 15,
         "xlim_C": [0,60], "xlim_E": [0,60],
-        "xlabel": "$k_{T,g}$ [GeV]",
-        "ylabel": "$1/N_\\mathrm{ev}\\,\\mathrm{d}N/\\mathrm{d}k_{T,g}$ [GeV$^{-1}$]",
+        "xlabel": "$k_{t,g}$ [GeV]",
+        "ylabel": "$1/N_\\mathrm{ev}\\,\\mathrm{d}N/\\mathrm{d}k_{t,g}$ [GeV$^{-1}$]",
         "val_F": -7,
         "val_T": -7
     },

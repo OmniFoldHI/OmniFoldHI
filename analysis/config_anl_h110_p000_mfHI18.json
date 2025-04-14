@@ -1,10 +1,10 @@
 {
     "code" : "h110_p000_mfHI18",
 
-    "nature_cause_file"     : "data/adam_clean/Delphes_Herwig_bkg0_output_Sig.out",
-    "nature_effect_file"    : "data/adam_clean/Delphes_Herwig_bkg1_output_Dat.out",
-    "synthetic_cause_file"  : "data/adam_clean/Delphes_Pythia_bkg0_output_Sig.out",
-    "synthetic_effect_file" : "data/adam_clean/Delphes_Pythia_bkg1_output_Dat.out",
+    "nature_cause_file"     : "../data/Delphes_Herwig_bkg0_output_Sig.out",
+    "nature_effect_file"    : "../data/Delphes_Herwig_bkg1_output_Dat.out",
+    "synthetic_cause_file"  : "../data/Delphes_Pythia_bkg0_output_Sig.out",
+    "synthetic_effect_file" : "../data/Delphes_Pythia_bkg1_output_Dat.out",
     
     "multifoldHI_obs" : [
         "phi_jet", "eta_jet",
