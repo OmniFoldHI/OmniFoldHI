@@ -1,9 +1,9 @@
 {
     "pt_jet": {
-        "nbins_C": 10, "nbins_E": 10,
-        "xlim_C": [200,800], "xlim_E": [200,800],
+        "nbins_C": 15, "nbins_E": 15,
+        "xlim_C": [250,800], "xlim_E": [250,800],
         "xlabel": "$p_T$ [GeV]",
-        "ylabel": "$1/N_\\mathrm{ev}\\,\\mathrm{d}N/\\mathrm{d}p_T$ [GeV$^{-1}$]",
+        "ylabel": "$1/N\\,\\mathrm{d}N/\\mathrm{d}p_T$ [GeV$^{-1}$]",
         "val_F": -7,
         "val_T": -7
     },
@@ -11,7 +11,7 @@
         "nbins_C": 10, "nbins_E": 10,
         "xlim_C": [-2.8,2.8], "xlim_E": [-2.8,2.8],
         "xlabel": "$\\eta$",
-        "ylabel": "$1/N_\\mathrm{ev}\\,\\mathrm{d}N/\\mathrm{d}\\eta$",
+        "ylabel": "$1/N\\,\\mathrm{d}N/\\mathrm{d}\\eta$",
         "val_F": -7,
         "val_T": -7
     },
@@ -19,7 +19,7 @@
         "nbins_C": 10, "nbins_E": 10,
         "xlim_C": [-3.15,3.15], "xlim_E": [-3.15,3.15],
         "xlabel": "$\\phi$",
-        "ylabel": "$1/N_\\mathrm{ev}\\,\\mathrm{d}N/\\mathrm{d}\\phi$",
+        "ylabel": "$1/N\\,\\mathrm{d}N/\\mathrm{d}\\phi$",
         "val_F": -7,
         "val_T": -7
     },
@@ -27,7 +27,7 @@
         "nbins_C": 15, "nbins_E": 15,
         "xlim_C": [0,100], "xlim_E": [0,100],
         "xlabel": "$m$ [GeV]",
-        "ylabel": "$1/N_\\mathrm{ev}\\,\\mathrm{d}N/\\mathrm{d}m$ [GeV$^{-1}$]",
+        "ylabel": "$1/N\\,\\mathrm{d}N/\\mathrm{d}m$ [GeV$^{-1}$]",
         "val_F": -7,
         "val_T": -7
     },
@@ -35,7 +35,7 @@
         "nbins_C": 15, "nbins_E": 15,
         "xlim_C": [0,100], "xlim_E": [0,100],
         "xlabel": "$n$",
-        "ylabel": "$1/N_\\mathrm{ev}\\,\\mathrm{d}N/\\mathrm{d}n$",
+        "ylabel": "$1/N\\,\\mathrm{d}N/\\mathrm{d}n$",
         "val_F": -7,
         "val_T": -7
     },
@@ -43,7 +43,7 @@
         "nbins_C": 15, "nbins_E": 15,
         "xlim_C": [0,0.5], "xlim_E": [0,0.5],
         "xlabel": "$z_g$",
-        "ylabel": "$1/N_\\mathrm{ev}\\,\\mathrm{d}N/\\mathrm{d}z_g$",
+        "ylabel": "$1/N\\,\\mathrm{d}N/\\mathrm{d}z_g$",
         "val_F": -7,
         "val_T": -7
     },
@@ -51,7 +51,7 @@
         "nbins_C": 20, "nbins_E": 20,
         "xlim_C": [0,0.4], "xlim_E": [0,0.4],
         "xlabel": "$\\theta_g$",
-        "ylabel": "$1/N_\\mathrm{ev}\\,\\mathrm{d}N/\\mathrm{d}\\theta_g$",
+        "ylabel": "$1/N\\,\\mathrm{d}N/\\mathrm{d}\\theta_g$",
         "val_F": -7,
         "val_T": -7
     },
@@ -59,7 +59,7 @@
         "nbins_C": 15, "nbins_E": 15,
         "xlim_C": [0,60], "xlim_E": [0,60],
         "xlabel": "$k_{t,g}$ [GeV]",
-        "ylabel": "$1/N_\\mathrm{ev}\\,\\mathrm{d}N/\\mathrm{d}k_{t,g}$ [GeV$^{-1}$]",
+        "ylabel": "$1/N\\,\\mathrm{d}N/\\mathrm{d}k_{t,g}$ [GeV$^{-1}$]",
         "val_F": -7,
         "val_T": -7
     },
@@ -67,7 +67,7 @@
         "nbins_C": 15, "nbins_E": 15,
         "xlim_C": [200,800], "xlim_E": [200,800],
         "xlabel": "$p_T^{sd}$ [GeV]",
-        "ylabel": "$1/N_\\mathrm{ev}\\,\\mathrm{d}N/\\mathrm{d}p_T^{sd}$ [GeV$^{-1}$]",
+        "ylabel": "$1/N\\,\\mathrm{d}N/\\mathrm{d}p_T^{sd}$ [GeV$^{-1}$]",
         "val_F": -7,
         "val_T": -7
     },
@@ -75,7 +75,7 @@
         "nbins_C": 15, "nbins_E": 15,
         "xlim_C": [0,100], "xlim_E": [0,100],
         "xlabel": "$m_{sd}$ [GeV]",
-        "ylabel": "$1/N_\\mathrm{ev}\\,\\mathrm{d}N/\\mathrm{d}m_{sd}$ [GeV$^{-1}$]",
+        "ylabel": "$1/N\\,\\mathrm{d}N/\\mathrm{d}m_{sd}$ [GeV$^{-1}$]",
         "val_F": -7,
         "val_T": -7
     },
@@ -83,7 +83,7 @@
         "nbins_C": 15, "nbins_E": 15,
         "xlim_C": [0.1,0.5], "xlim_E": [0.1,0.5],
         "xlabel": "$z_{sd}$",
-        "ylabel": "$1/N_\\mathrm{ev}\\,\\mathrm{d}N/\\mathrm{d}z_{sd}$",
+        "ylabel": "$1/N\\,\\mathrm{d}N/\\mathrm{d}z_{sd}$",
         "val_F": -7,
         "val_T": -7
     },
@@ -91,15 +91,15 @@
         "nbins_C": 15, "nbins_E": 15,
         "xlim_C": [200,800], "xlim_E": [200,800],
         "xlabel": "$p_T^{rsd}$ [GeV]",
-        "ylabel": "$1/N_\\mathrm{ev}\\,\\mathrm{d}N/\\mathrm{d}p_T^{rsd}$ [GeV$^{-1}$]",
+        "ylabel": "$1/N\\,\\mathrm{d}N/\\mathrm{d}p_T^{rsd}$ [GeV$^{-1}$]",
         "val_F": -7,
         "val_T": -7
     },
     "n_RSD": {
-        "nbins_C": 15, "nbins_E": 15,
-        "xlim_C": [0,100], "xlim_E": [0,100],
+        "nbins_C": 10, "nbins_E": 10,
+        "xlim_C": [0,60], "xlim_E": [0,60],
         "xlabel": "$n_{rsd}$",
-        "ylabel": "$1/N_\\mathrm{ev}\\,\\mathrm{d}N/\\mathrm{d}n_{rsd}$",
+        "ylabel": "$1/N\\,\\mathrm{d}N/\\mathrm{d}n_{rsd}$",
         "val_F": -7,
         "val_T": -7
     },
@@ -107,15 +107,15 @@
         "nbins_C": 15, "nbins_E": 15,
         "xlim_C": [0,0.5], "xlim_E": [0,0.5],
         "xlabel": "$\\tau_1$",
-        "ylabel": "$1/N_\\mathrm{ev}\\,\\mathrm{d}N/\\mathrm{d}\\tau_1$",
+        "ylabel": "$1/N\\,\\mathrm{d}N/\\mathrm{d}\\tau_1$",
         "val_F": -7,
         "val_T": -7
     },
     "tau2": {
-        "nbins_C": 15, "nbins_E": 15,
+        "nbins_C": 17, "nbins_E": 17,
         "xlim_C": [0,0.4], "xlim_E": [0,0.4],
         "xlabel": "$\\tau_2$",
-        "ylabel": "$1/N_\\mathrm{ev}\\,\\mathrm{d}N/\\mathrm{d}\\tau_2$",
+        "ylabel": "$1/N\\,\\mathrm{d}N/\\mathrm{d}\\tau_2$",
         "val_F": -7,
         "val_T": -7
     },
@@ -123,7 +123,7 @@
         "nbins_C": 15, "nbins_E": 15,
         "xlim_C": [0,0.3], "xlim_E": [0,0.3],
         "xlabel": "$\\tau_3$",
-        "ylabel": "$1/N_\\mathrm{ev}\\,\\mathrm{d}N/\\mathrm{d}\\tau_3$",
+        "ylabel": "$1/N\\,\\mathrm{d}N/\\mathrm{d}\\tau_3$",
         "val_F": -7,
         "val_T": -7
     },
@@ -131,7 +131,7 @@
         "nbins_C": 15, "nbins_E": 15,
         "xlim_C": [0,0.25], "xlim_E": [0,0.25],
         "xlabel": "$\\tau_4$",
-        "ylabel": "$1/N_\\mathrm{ev}\\,\\mathrm{d}N/\\mathrm{d}\\tau_4$",
+        "ylabel": "$1/N\\,\\mathrm{d}N/\\mathrm{d}\\tau_4$",
         "val_F": -7,
         "val_T": -7
     },
@@ -139,7 +139,7 @@
         "nbins_C": 15, "nbins_E": 15,
         "xlim_C": [0,0.2], "xlim_E": [0,0.2],
         "xlabel": "$\\tau_5$",
-        "ylabel": "$1/N_\\mathrm{ev}\\,\\mathrm{d}N/\\mathrm{d}\\tau_5$",
+        "ylabel": "$1/N\\,\\mathrm{d}N/\\mathrm{d}\\tau_5$",
         "val_F": -7,
         "val_T": -7
     }
