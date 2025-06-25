@@ -91,7 +91,7 @@ def eps(p_ec_mc):
           + Permut sum_{jk=1}^nE      th[i1,..., 0,...,jk,...,0]           * xE[0,...,jk,...,0]          * dxE[0,...,jk,...,0]
           + Permut sum_{jk1,jk2=1}^nE th[i1,..., 0,...,jk1,...,jk2,...,0]  * xE[0,...,jk1,...,jk2,...,0] * dxE[0,...,jk1,...,jk2,...,0]
           + ...
-          + Permur sum_{j1,...,NOT jk,...=1}^nE th[i1,...,j1,...,jk=0,...] * xE[j1,...,jk=0,...]         * dxE[j1,...,jk=0,...]
+          + Permut sum_{j1,...,NOT jk,...=1}^nE th[i1,...,j1,...,jk=0,...] * xE[j1,...,jk=0,...]         * dxE[j1,...,jk=0,...]
         
         Using Bayes theorem, invert th-->lam for terms containing Trash:
         = sum_{j1,j2,...=1}^nE th[i1,i2,..., j1,j2,...] * xE[j1,j2,...] * dxE[j1,j2,...]
