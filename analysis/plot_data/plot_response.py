@@ -106,7 +106,7 @@ with mpl.rc_context({'font.family': 'sans-serif', 'font.size': 14, 'text.usetex'
         'dat': {'label':'dat', 'lw':2, 'color':'k'}
     }
 
-    with PdfPages('../figures/response.pdf') as pdf:
+    with PdfPages('response.pdf') as pdf:
 
         for i,ikey in enumerate(obs):
             for j,jkey in enumerate(obs):
