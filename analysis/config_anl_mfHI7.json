@@ -1,0 +1,18 @@
+{
+    "code" : "mfHI7",
+
+    "nature_cause_file"     : "../data/Herwig_bkg0_Delphes_Generated.out",
+    "nature_effect_file"    : "../data/Herwig_bkg1_Delphes_Simulated.out",
+    "synthetic_cause_file"  : "../data/Pythia_bkg0_Delphes_Generated.out",
+    "synthetic_effect_file" : "../data/Pythia_bkg1_Delphes_Simulated.out",
+    
+    "multifoldHI_obs" : [
+        "pt_jet", "kt_DyG", "tau2",
+        "eta_jet", "phi_jet",
+        "n_jet", "m_jet"
+    ],
+    "multifoldHI_n_iterations" : 5,
+    "multifoldHI_unc_n_stat"   : 2,
+    "multifoldHI_unc_n_syst"   : 5
+
+}
