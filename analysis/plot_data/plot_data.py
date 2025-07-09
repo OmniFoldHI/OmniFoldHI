@@ -65,10 +65,10 @@ with mpl.rc_context({'font.family': 'sans-serif', 'font.size': 14, 'text.usetex'
             # if key not in ['pt_jet','kt_DyG','tau2']: continue
 
             # Data out of binrange is trash
-            p8_c_clean = np.array([val if (val!=-1 and obs[key]['xlim_C'][0]<=val<=obs[key]['xlim_C'][1]) else -7 for val in p8_c.T[i]])
-            p8_e_clean = np.array([val if (val!=-1 and obs[key]['xlim_E'][0]<=val<=obs[key]['xlim_E'][1]) else -7 for val in p8_e.T[i]])
-            h7_c_clean = np.array([val if (val!=-1 and obs[key]['xlim_C'][0]<=val<=obs[key]['xlim_C'][1]) else -7 for val in h7_c.T[i]])
-            h7_e_clean = np.array([val if (val!=-1 and obs[key]['xlim_E'][0]<=val<=obs[key]['xlim_E'][1]) else -7 for val in h7_e.T[i]])
+            p8_c_clean = np.array([val if (val!=-7 and obs[key]['xlim_C'][0]<=val<=obs[key]['xlim_C'][1]) else -7 for val in p8_c.T[i]])
+            p8_e_clean = np.array([val if (val!=-7 and obs[key]['xlim_E'][0]<=val<=obs[key]['xlim_E'][1]) else -7 for val in p8_e.T[i]])
+            h7_c_clean = np.array([val if (val!=-7 and obs[key]['xlim_C'][0]<=val<=obs[key]['xlim_C'][1]) else -7 for val in h7_c.T[i]])
+            h7_e_clean = np.array([val if (val!=-7 and obs[key]['xlim_E'][0]<=val<=obs[key]['xlim_E'][1]) else -7 for val in h7_e.T[i]])
 
             # Histograms
             xbins_c = np.linspace(*obs[key]['xlim_C'], obs[key]['nbins_C'])

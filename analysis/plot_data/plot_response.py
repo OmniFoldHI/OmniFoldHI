@@ -113,8 +113,8 @@ with mpl.rc_context({'font.family': 'sans-serif', 'font.size': 14, 'text.usetex'
                 print(ikey,jkey)
 
                 # Data out of binrange is trash
-                effect = np.array([val if (val!=-1 and obs[ikey]['xlim_E'][0]<=val<=obs[ikey]['xlim_E'][1]) else -7 for val in h7_e.T[i]])
-                cause  = np.array([val if (val!=-1 and obs[jkey]['xlim_C'][0]<=val<=obs[jkey]['xlim_C'][1]) else -7 for val in h7_c.T[j]])
+                effect = np.array([val if (val!=-7 and obs[ikey]['xlim_E'][0]<=val<=obs[ikey]['xlim_E'][1]) else -7 for val in h7_e.T[i]])
+                cause  = np.array([val if (val!=-7 and obs[jkey]['xlim_C'][0]<=val<=obs[jkey]['xlim_C'][1]) else -7 for val in h7_c.T[j]])
 
                 xbins_e = np.linspace(*obs[ikey]['xlim_E'], obs[ikey]['nbins_E'])
                 xbins_c = np.linspace(*obs[jkey]['xlim_C'], obs[jkey]['nbins_C'])
