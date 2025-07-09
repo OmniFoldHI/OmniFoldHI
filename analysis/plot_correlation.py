@@ -84,4 +84,4 @@ with mpl.rc_context({'font.family': 'sans-serif', 'font.size': 14, 'text.usetex'
     ax[0].set_ylabel(r'Truth')
     ax[0].tick_params(axis='both',which='both', left=False, right=False, top=False, bottom=False, labelbottom=True,labeltop=False, direction='in')
 
-    plt.savefig('correlation.pdf', bbox_inches='tight')
+    plt.savefig('../figures/correlation.pdf', bbox_inches='tight')
