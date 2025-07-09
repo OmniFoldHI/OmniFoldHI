@@ -58,7 +58,7 @@ with mpl.rc_context({'font.family': 'sans-serif', 'font.size': 14, 'text.usetex'
         'dat': {'label':'dat', 'lw':2, 'color':'k'}
     }
 
-    with PdfPages('data.pdf') as pdf:
+    with PdfPages('../../figures/data.pdf') as pdf:
 
         for i,key in enumerate(obs):
             print(key)
