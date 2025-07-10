@@ -1,6 +1,6 @@
 # OmniFoldHI
 
-This repository contains the data and code used to produce the results presented in our work: [arXiv:2507.xxxxx](https://arxiv.org/abs/2507.xxxxx).
+This repository contains the data and code used to produce the results presented in our work: [arXiv:2507.06291](https://arxiv.org/abs/2507.06291).
 
 ## Repository Structure
 
